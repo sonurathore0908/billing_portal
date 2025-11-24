@@ -1,0 +1,184 @@
+/* #root {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+} */
+
+
+/* Watermark background logo */
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 900px;                    /* size of watermark */
+  height: 900px;
+  background: url("/rm_bg.png") no-repeat center center;
+  background-size: contain;
+  opacity: 0.08;                   /* light transparent effect */
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: rotate-bg 80s linear infinite; /* very slow rotation */
+  pointer-events: none;            /* ensures click works normally */
+  z-index: 0;                      /* stays behind content */
+}
+
+/* Actual page content (like login box) stays above */
+.sonu-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Slow rotation animation */
+@keyframes rotate-bg {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Optional: Faster rotation when hovering anywhere */
+body:hover::before {
+  animation: rotate-bg 25s linear infinite;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+.sonu-container {
+  min-height: 90vh; /* full screen height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color:  white;
+  border: 1px solid violet;
+  border-radius: 10px;
+  width: 35vw;
+
+}
+
+
+.auth-toggle {
+  display: flex;
+  justify-content: space-between;
+  background-color: #f5e1ff; /* Light violet shade */
+  border: 1px solid #d8b4fe; /* Border color */
+  border-radius: 25px;
+  padding: 5px;
+  width: 100%;
+}
+
+.auth-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 0;
+  font-weight: 600;
+  color: #5b21b6; /* Dark violet text */
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-btn.active {
+  background-color: #d8b4fe; /* Violet active background */
+  color: white; /* White text when active */
+  box-shadow: 0 2px 6px rgba(90, 0, 150, 0.2);
+}
+
+.auth-btn:hover {
+  background-color: #e9d5ff; /* Hover shade */
+}
+
+
+
+.form-container {
+  background: #ffffff;
+  border: 1px solid #e9d5ff;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 380px;
+  box-shadow: 0px 4px 12px rgba(180, 120, 255, 0.1);
+}
+
+/* Title */
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #6b21a8; /* violet */
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+
+
+/* Password eye icon */
+.password-wrapper {
+  position: relative;
+}
+
+.eye-icon {
+  position: absolute;
+  right: -70px;   /* 👈 icon thoda andar shift ho gaya */
+  top: 50%;      /* 👈 vertically center kar diya */
+  transform: translateY(-90%); /* exact center alignment */
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #a855f7;
+  user-select: none;
+}
+
+
+.instruction-heading {
+  font-weight: bold;          /* Makes the text bold */
+  color: #7e22ce;             /* Optional: purple shade like your theme */
+  margin-bottom: 6px;         /* Adds a little spacing below */
+  font-size: 15px;            /* Adjust text size if needed */
+}
+
+/* Main COPS screen */
+.cops_screen {
+  width: 100%;
+  height: 100vh;
+  background-color: #faf5ff; /* Light violet background */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Ensure children take full width */
+  margin: 0;
+  padding: 0;
+}
+
