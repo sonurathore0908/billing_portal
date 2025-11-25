@@ -259,8 +259,8 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
     borderRadius: "10px",
     height: "440px",
     width: "100%",
-    margin: "20px auto",
-    padding: "5px",
+    margin: "40px auto",
+    padding: "10px",
     boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
     overflow: "hidden",
   };
@@ -782,6 +782,47 @@ const BuScreen = ({ userData }) => {
     setShowEditModal(false);
     setEditingRecord(null);
   };
+  const handleCancel = () => {
+    setShowForm(false);
+  };
+  const handleSubmitButton = async (item) => {
+    if (!window.confirm(`Submit billing ID ${item.billing_id}? This will mark it as PROCESSED.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch("https://biiling_portal.mfilterit.net/update_billing_status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          billing_id: item.billing_id,
+          billing_status: "Processed"  // ✅ Status update to Processed
+        }),
+      });
+
+      const result = await response.json();
+      console.log("Submit API Response:", result);
+
+      if (result.status === "success" || result.message.includes("success")) {
+        alert("✅ Billing record submitted successfully!");
+        
+        // ✅ Update local state to reflect change immediately
+        setRecords((prevRecords) =>
+          prevRecords.map((record) =>
+            record.billing_id === item.billing_id
+              ? { ...record, billing_status: "Processed" }
+              : record
+          )
+        );
+      } else {
+        alert("⚠️ " + (result.message || "Failed to submit"));
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      alert("❌ Error submitting record!");
+    }
+  };
+  
 
   // Styles
   const dataTableContainer = {
@@ -874,7 +915,7 @@ const BuScreen = ({ userData }) => {
     flexDirection: "column",
     justifyContent: "center",
     position: "relative",
-    width: "220px",
+    width: "17.34%",
   };
 
   const textStyle = {
@@ -912,13 +953,7 @@ const BuScreen = ({ userData }) => {
     >
       {/* TOP ROW - Statistics and Actions */}
       <div style={{ justifyContent: "center", display: "flex", gap: "15px" }}>
-        {/* Box 1: Total Active Records */}
-        <div style={boxStyle}>
-          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
-            Total Active Records
-          </h3>
-          <p style={textStyle}>{data?.totalRecords || 0}</p>
-        </div>
+        
 
         {/* Box 2: Total Billing Numbers */}
         <div style={boxStyle}>
@@ -927,8 +962,14 @@ const BuScreen = ({ userData }) => {
           </h3>
           <p style={textStyle}>{data?.totalBillingNumbers || 0}</p>
         </div>
-
-        {/* Box 3: Processed Bill */}
+              {/* Box 1: Total Active Records */}
+              <div style={boxStyle}>
+                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+                  Total Active Records
+                </h3>
+                <p style={textStyle}>{data?.totalRecords || 0}</p>
+              </div>
+              {/* Box 3: Processed Bill */}
               <div style={boxStyle}>
                 <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
                   Processed Bill

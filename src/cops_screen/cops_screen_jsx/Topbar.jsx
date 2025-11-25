@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useRef,useState, useEffect } from "react";
 import Cops_sreen from "./Cops_sreen";
 import BuScreen from "./BuScreen";
 import SalesScreen from "./Sales_screen";
+
 
 const Topbar = ({ userData, onLogout }) => {
   const validDepartments = ["cops", "customer ops", "bu", "bu head", "sales", "finance", "all"];
   const [selectedDashboard, setSelectedDashboard] = useState("Customer Ops");
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
 
   const handleLogout = () => {
     if (onLogout) onLogout();
@@ -17,7 +19,7 @@ const Topbar = ({ userData, onLogout }) => {
     if (!userData || !userData.department) return;
 
     const dept = userData.department.toLowerCase();
-
+    // const hasValidDept = validKeywords.some(key => dept.includes(key));
 
     if (dept !== "all") {
       // Department user → direct dashboard load
@@ -94,6 +96,20 @@ const Topbar = ({ userData, onLogout }) => {
     }
   };
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false); // outside click → close menu
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Styles
   const dropdownFont = {
     fontFamily: "'Poppins', 'Inter', sans-serif",
@@ -165,7 +181,7 @@ const Topbar = ({ userData, onLogout }) => {
           
           {/* ⭐ Dropdown sirf ALL department ke liye */}
           {showMenu && userData?.department?.toLowerCase() === "all" && (
-            <div style={dropdownStyle}>
+            <div ref={menuRef} style={dropdownStyle}>
               <div
                 className="dropdown-item"
                 onClick={() => {

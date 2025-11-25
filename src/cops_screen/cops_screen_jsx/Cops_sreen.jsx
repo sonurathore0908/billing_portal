@@ -708,7 +708,7 @@ const CopsScreen = ({ userData }) => {
         endBilling_date: formData.endBillingDate,
         affiliate_lead: formData.affiliateLead || 0,
         nonAffiliateNumber: formData.nonAffiliateNumber || 0,
-        number: formData.number || 0,
+        number: formData.number || 0
       };
 
       const res = await fetch("https://biiling_portal.mfilterit.net/insert_cops_bill", {
@@ -720,7 +720,7 @@ const CopsScreen = ({ userData }) => {
       const responseData = await res.json();
       console.log("API Response:", responseData);
 
-      if (responseData.status === "success") {
+      if (responseData === "Successfully bill inserted in dashboard") {
         alert("✅ Bill Inserted Successfully!");
       } else {
         alert("⚠️ " + responseData.message);
@@ -852,7 +852,7 @@ const CopsScreen = ({ userData }) => {
         end_billing_date: editingRecord.end_billing_date,
         affiliate_lead: editingRecord.affiliate_lead || 0,
         nonAffiliateNumber: editingRecord.nonaffiliatenumber || 0,
-        number: editingRecord.number || 0,
+        number: editingRecord.number || 0
         // Add other fields as needed
       };
 
@@ -869,6 +869,13 @@ const CopsScreen = ({ userData }) => {
 
       if (result.status === "success" || result.message.includes("success")) {
         alert("✅ Record Updated Successfully!");
+          setRecords(prev =>
+          prev.map(r =>
+            r.billing_id === editingRecord.billing_id
+              ? { ...r, ...editingRecord } // updated values
+              : r
+          )
+        );
         setShowEditModal(false);
         setEditingRecord(null);
         
@@ -1017,14 +1024,6 @@ const CopsScreen = ({ userData }) => {
     >
       {/* TOP ROW - Statistics and Actions */}
       <div style={{ justifyContent: "center", display: "flex", gap: "15px" }}>
-        {/* Box 1: Total Active Records */}
-        <div style={boxStyle}>
-          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
-            Total Active Records
-          </h3>
-          <p style={textStyle}>{data?.totalRecords || 0}</p>
-        </div>
-
         {/* Box 2: Total Billing Numbers */}
         <div style={boxStyle}>
           <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
@@ -1033,7 +1032,14 @@ const CopsScreen = ({ userData }) => {
           <p style={textStyle}>{data?.totalBillingNumbers || 0}</p>
         </div>
 
-        {/* Box 3: Processed Bill */}
+              {/* Box 1: Total Active Records */}
+              <div style={boxStyle}>
+                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+                  Total Active Records
+                </h3>
+                <p style={textStyle}>{data?.totalRecords || 0}</p>
+              </div>
+              {/* Box 3: Processed Bill */}
               <div style={boxStyle}>
                 <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
                   Processed Bill
@@ -1162,7 +1168,7 @@ const CopsScreen = ({ userData }) => {
               Create New Billing Record
             </h2>
             <div style={formGridStyle}>
-              {Object.keys(formData).filter(field => !["affiliateLead", "nonAffiliateNumber", "number"].includes(field)).map((field) => (
+              {Object.keys(formData).filter(field => !["affiliateLead", "nonAffiliateNumber", "number","affiliateNumber"].includes(field)).map((field) => (
                 <label key={field} style={{ display: "flex", flexDirection: "column" }}>
                   {field.replace(/([A-Z])/g, " $1").trim()}*
                   {field !== "payoutModel" ? (
@@ -1202,9 +1208,9 @@ const CopsScreen = ({ userData }) => {
                     {formData.payoutModel === "Event" && (
                       <input
                         type="number"
-                        name="affiliateLeads"
+                        name="affiliateNumber"
                         placeholder="Affiliate Number"
-                        value={formData.affiliateLead || ""}
+                        value={formData.affiliateNumber || ""}
                         onChange={handleChange}
                         required
                         style={{ padding: "10px", borderRadius: "5px", border: "1px solid #8B00FF", marginTop: "5px", }}
