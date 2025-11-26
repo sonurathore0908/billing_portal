@@ -3,9 +3,10 @@ import { DateRange } from "react-date-range";
 import { format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import { Pencil, Trash2, CheckCircle,Copy,Check } from "lucide-react";
 
 // ========== DATA TABLE COMPONENT ==========
-const DataShow = ({ onEdit,username, startDate, endDate  }) => {
+const DataShow = ({ onEdit,onCopy,username, startDate, endDate, refreshTrigger  }) => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,56 +33,52 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
         { key: "client_package_status", label: "Client Package Status" },
         { key: "payout_model", label: "Payout Model" },
         { key: "billing_numbers", label: "Billing Numbers" },
-
-        // timestamps
         { key: "date_created", label: "Date Created" },
         { key: "last_updated_date", label: "Last Updated Date" },
-
-        // optional numeric fields
         { key: "affiliate_lead", label: "Affiliate Lead" },
         { key: "nonaffiliatenumber", label: "Non Affiliate Number" },
         { key: "number", label: "Number" },
-
-        // email fields
         { key: "bu_email", label: "BU Email" },
         { key: "user_email", label: "User Email" },
-
-        // date fields
         { key: "start_billing_date", label: "Start Billing Date" },
         { key: "end_billing_date", label: "End Billing Date" },
-
-        // username
+        { key: "crm_number", label: "CRM ID" },
         
       ];
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch("https://biiling_portal.mfilterit.net/delete_billing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          billing_id: id
-        }),
-      });
-
-      const result = await response.json();
-      console.log("Delete API Response:", result);
-
-      if (result.status === "success" || result.message.includes("success")) {
-        alert("✅ Record deleted successfully!");
-        
-        // ✅ Remove from local state
-        setRecords((prev) => prev.filter((record) => record.billing_id !== id));
-      } else {
-        alert("⚠️ " + (result.message || "Failed to delete"));
+      if (!window.confirm("Are you sure you want to delete this record?")) {
+        return;
       }
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("❌ Error deleting record!");
+
+      try {
+        const response = await fetch("https://biiling_portal.mfilterit.net/delete_billing", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            billing_id: id
+          }),
+        });
+
+        const result = await response.json();
+        console.log("Delete API Response:", result);
+
+        if (result.status === "success" || result.message.includes("success")) {
+          alert("✅ Record deleted successfully!");
+          
+          // ✅ Remove from local state
+          setRecords((prev) => prev.filter((record) => record.billing_id !== id));
+        } else {
+          alert("⚠️ " + (result.message || "Failed to delete"));
+        }
+      } catch (error) {
+        console.error("Delete error:", error);
+        alert("❌ Error deleting record!");
+      }
+    };
+    const handleCopy = (item) => {
+    if (onCopy) {
+      onCopy(item);
     }
   };
   const handleSubmitButton = async (item) => {
@@ -152,6 +149,7 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         // Build payload with date range
         const payload = {
           username: username
@@ -195,7 +193,7 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
     if (username) {
       fetchData();
     }
-  }, [username, startDate, endDate]);
+  }, [username, startDate, endDate,refreshTrigger]);
 
   // Handle sorting
   const handleSort = (key) => {
@@ -259,7 +257,8 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
       (item.customer_ops_user && item.customer_ops_user.toLowerCase().includes(searchLower)) ||
       (item.package_name && item.package_name.toLowerCase().includes(searchLower)) ||
       (item.bu_email && item.bu_email.toLowerCase().includes(searchLower)) ||
-      (item.user_email && item.user_email.toLowerCase().includes(searchLower))
+      (item.user_email && item.user_email.toLowerCase().includes(searchLower)) ||
+      (item.crm_number && item.crm_number.toLowerCase().includes(searchLower))
     );
   });
   // Action Button Component
@@ -505,21 +504,58 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
                     ) : null
                   )}
                   <td style={{ padding: "10px", textAlign: "left", minWidth: "180px" }}>
+                    
                     <ActionButton
-                      label="Edit"
-                      color="black"
-                      onClick={() => handleEdit(item)}
-                    />
-                    <ActionButton
-                      label="Delete"
-                      color="red"
-                      onClick={() => handleDelete(item.billing_id)}
-                    />
-                    <ActionButton
-                      label="Submit"
-                      color="green"
-                      onClick={() => handleSubmitButton(item)}
-                    />
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Edit"
+                            >
+                              <Pencil size={16} strokeWidth={3}  />
+                            </span>
+                          }
+                          color="black"
+                          onClick={() => handleEdit(item)}
+                        />
+
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} strokeWidth={3} />
+                            </span>
+                          }
+                          color="red"
+                          onClick={() => handleDelete(item.billing_id)}
+                        />
+
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Submit"
+                            >
+                              <Check size={20} strokeWidth={3} />
+                            </span>
+                          }
+                          color="green"
+                          onClick={() => handleSubmitButton(item)}
+                        />
+
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Copy"
+                            >
+                              <Copy size={16} strokeWidth={3}  />
+                            </span>
+                          }
+                          color="blue"
+                          onClick={() => onCopy(item)}
+                        />
                   </td>
                 </tr>
               ))}
@@ -532,9 +568,19 @@ const DataShow = ({ onEdit,username, startDate, endDate  }) => {
 };
 // ========== MAIN COMPONENT ==========
 const CopsScreen = ({ userData }) => {
+  const formatDate = (date) => {
+    if (!date) return "";
+    return date.toISOString().split("T")[0];  // yyyy-mm-dd only
+  };
   const username = userData?.username || "guest@mfilterit.com";
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const today = new Date();
+  const lastMonth = new Date();
+  lastMonth.setMonth(lastMonth.getMonth() - 1);
+  const todayStr = formatDate(today);
+const lastMonthStr = formatDate(lastMonth);
+  const [startDate, setStartDate] = useState(lastMonthStr);
+  const [endDate, setEndDate] = useState(todayStr);
   const [data, setData] = useState(null);
   const [open, setOpen] = useState(false);
   const calendarRef = useRef(null);
@@ -580,6 +626,8 @@ const CopsScreen = ({ userData }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [copyingRecord, setCopyingRecord] = useState(null);
   
   // Month selection
   const [startMonth, setStartMonth] = useState("");
@@ -600,7 +648,8 @@ const CopsScreen = ({ userData }) => {
     endBillingDate:"",
     affiliateLead: "",
     nonAffiliateNumber:"",
-    number:""
+    number:"",
+    crmNumber:""
   });
 
   // Month list
@@ -618,13 +667,6 @@ const CopsScreen = ({ userData }) => {
     { name: "November", value: 11 },
     { name: "December", value: 12 },
   ];
-
-  // Handle month selection
-  const handleStartChange = (e) => {
-    const value = e.target.value;
-    setStartMonth(value);
-    console.log("Selected Month:", value);
-  };
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -708,8 +750,10 @@ const CopsScreen = ({ userData }) => {
         endBilling_date: formData.endBillingDate,
         affiliate_lead: formData.affiliateLead || 0,
         nonAffiliateNumber: formData.nonAffiliateNumber || 0,
-        number: formData.number || 0
+        number: formData.number || 0,
+        crm_number:formData.crmNumber
       };
+      console.log('cen_number_1',payload.crm_number);
 
       const res = await fetch("https://biiling_portal.mfilterit.net/insert_cops_bill", {
         method: "POST",
@@ -721,6 +765,7 @@ const CopsScreen = ({ userData }) => {
       console.log("API Response:", responseData);
 
       if (responseData === "Successfully bill inserted in dashboard") {
+        window.location.reload();
         alert("✅ Bill Inserted Successfully!");
       } else {
         alert("⚠️ " + responseData.message);
@@ -739,7 +784,8 @@ const CopsScreen = ({ userData }) => {
         nonAffiliateNumber: "",
         number: "",
         startBillingDate: "",
-        endBillingDate: ""
+        endBillingDate: "",
+        crmNumber:""
       });
 
     } catch (err) {
@@ -783,6 +829,7 @@ const CopsScreen = ({ userData }) => {
           });
 
           if (response.ok) {
+            window.location.reload();
             successCount++;
           } else {
             failCount++;
@@ -852,7 +899,8 @@ const CopsScreen = ({ userData }) => {
         end_billing_date: editingRecord.end_billing_date,
         affiliate_lead: editingRecord.affiliate_lead || 0,
         nonAffiliateNumber: editingRecord.nonaffiliatenumber || 0,
-        number: editingRecord.number || 0
+        number: editingRecord.number || 0,
+        crmNumber:editingRecord.crmNumber
         // Add other fields as needed
       };
 
@@ -869,19 +917,21 @@ const CopsScreen = ({ userData }) => {
 
       if (result.status === "success" || result.message.includes("success")) {
         alert("✅ Record Updated Successfully!");
-          setRecords(prev =>
-          prev.map(r =>
-            r.billing_id === editingRecord.billing_id
-              ? { ...r, ...editingRecord } // updated values
-              : r
-          )
-        );
+        //   setRecords(prev =>
+        //   prev.map(r =>
+        //     r.billing_id === editingRecord.billing_id
+        //       ? { ...r, ...editingRecord } // updated values
+        //       : r
+        //   )
+        // );
         setShowEditModal(false);
         setEditingRecord(null);
+        setRefreshTrigger(prev => prev + 1);
         
         // ✅ Refresh data by re-fetching
         window.location.reload(); // Simple approach, or trigger re-fetch
       } else {
+        console.log(result)
         alert("⚠️ " + (result.message || "Failed to update"));
       }
     } catch (error) {
@@ -889,7 +939,68 @@ const CopsScreen = ({ userData }) => {
       alert("❌ Something went wrong!");
     }
   };
+  // ✅ COPY HANDLERS
+  const handleCopy = (record) => {
+    console.log("📋 Copying record:", record);
+    setCopyingRecord(record);
+    setShowCopyModal(true);
+  };
 
+  const handleCopyChange = (e) => {
+    const { name, value } = e.target;
+    setCopyingRecord((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCopySubmit = async () => {
+    if (!copyingRecord) return;
+
+    try {
+      const payload = {
+        email_id: username,  // ✅ Logged-in user's email
+        country: copyingRecord.country,
+        product_type: copyingRecord.product_type,
+        sales_person: copyingRecord.sales_person,
+        packages_name: copyingRecord.package_name,
+        client_package_status: copyingRecord.client_package_status,
+        payout_model: copyingRecord.payout_model,
+        billing_number: copyingRecord.billing_numbers,
+        StartBilling_date: copyingRecord.start_billing_date?.split('T')[0],
+        endBilling_date: copyingRecord.end_billing_date?.split('T')[0],
+        affiliate_lead: copyingRecord.affiliate_lead || 0,
+        nonAffiliateNumber: copyingRecord.nonaffiliatenumber || 0,
+        number: copyingRecord.number || 0,
+        crm_number: copyingRecord.crm_number || ""
+      };
+
+      console.log("📤 Copying record with payload:", payload);
+
+      const response = await fetch("https://biiling_portal.mfilterit.net/insert_cops_bill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("✅ Copy API Response:", result);
+
+      if (result === "Successfully bill inserted in dashboard" || result.status === "success") {
+        alert("✅ Record Copied Successfully!");
+        setShowCopyModal(false);
+        setCopyingRecord(null);
+        window.location.reload();
+      } else {
+        alert("⚠️ " + (result.message || "Failed to copy"));
+      }
+    } catch (error) {
+      console.error("Copy error:", error);
+      alert("❌ Something went wrong!");
+    }
+  };
+
+  const handleCancelCopy = () => {
+    setShowCopyModal(false);
+    setCopyingRecord(null);
+  };
   const handleCancelEdit = () => {
     setShowEditModal(false);
     setEditingRecord(null);
@@ -1060,28 +1171,7 @@ const CopsScreen = ({ userData }) => {
               >
                 Select Date Range
                  {/* ✅ Clear Date Filter Button */}
-                  {(startDate || endDate) && (
-                    <button
-                      style={{
-                        ...createNewBillingRecord,
-                        backgroundColor: "#fdfbfbff", width:"10%", padding:"0px",marginLeft:"5%",height:"0%"
-                      }}
-                      onClick={() => {
-                        setStartDate("");
-                        setEndDate("");
-                        setRange([
-                          {
-                            startDate: new Date(),
-                            endDate: new Date(),
-                            key: "selection",
-                          },
-                        ]);
-                        console.log("🗑️ Date filter cleared");
-                      }}
-                    >
-                      🗑️
-                      </button>
-                    )}
+                  
               </h3>
 
               <input
@@ -1669,14 +1759,301 @@ const CopsScreen = ({ userData }) => {
           </div>
         </div>
       )}
+      {/* COPY MODAL - EXACT SAME AS EDIT BUT CREATES NEW RECORD */}
+      {showCopyModal && copyingRecord && (
+        <div style={modalOverlayStyle} onClick={handleCancelCopy}>
+          <div 
+            style={{
+              ...modalContentStyle,
+              width: "70%",
+              maxHeight: "85vh"
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ textAlign: "center", color: "#8B00FF", marginBottom: "20px" }}>
+              📋 Copy & Create New Billing Record
+            </h2>
+            
+            <div style={{
+              background: "#fffbcc",
+              padding: "10px",
+              borderRadius: "5px",
+              marginBottom: "15px",
+              border: "2px solid #ffc107"
+            }}>
+              <p style={{ margin: 0, fontSize: "14px", color: "#856404" }}>
+                ℹ️ <strong>Note:</strong> This will create a NEW record with the same data. You can modify any field before creating.
+              </p>
+            </div>
+
+            <div style={formGridStyle}>
+              {/* Country */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Country*
+                <input
+                  type="text"
+                  name="country"
+                  value={copyingRecord.country || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Product Type */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Product Type*
+                <input
+                  type="text"
+                  name="product_type"
+                  value={copyingRecord.product_type || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Sales Person */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Sales Person*
+                <input
+                  type="text"
+                  name="sales_person"
+                  value={copyingRecord.sales_person || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Package Name */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Package Name*
+                <input
+                  type="text"
+                  name="package_name"
+                  value={copyingRecord.package_name || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Client Package Status */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Client Status*
+                <input
+                  type="text"
+                  name="client_package_status"
+                  value={copyingRecord.client_package_status || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Payout Model */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Payout Model*
+                <select
+                  name="payout_model"
+                  value={copyingRecord.payout_model || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                >
+                  <option value="">Select Payout Model</option>
+                  <option value="Visit">Visit</option>
+                  <option value="Event">Event</option>
+                  <option value="Click">Click</option>
+                  <option value="Install">Install</option>
+                </select>
+              </label>
+
+              {/* Billing Numbers */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Billing Numbers*
+                <input
+                  type="number"
+                  name="billing_numbers"
+                  value={copyingRecord.billing_numbers || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* CRM Number */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                CRM ID
+                <input
+                  type="text"
+                  name="crm_number"
+                  value={copyingRecord.crm_number || ""}
+                  onChange={handleCopyChange}
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Start Billing Date */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                Start Billing Date*
+                <input
+                  type="date"
+                  name="start_billing_date"
+                  value={copyingRecord.start_billing_date?.split('T')[0] || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* End Billing Date */}
+              <label style={{ display: "flex", flexDirection: "column" }}>
+                End Billing Date*
+                <input
+                  type="date"
+                  name="end_billing_date"
+                  value={copyingRecord.end_billing_date?.split('T')[0] || ""}
+                  onChange={handleCopyChange}
+                  required
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #8B00FF",
+                    marginTop: "5px",
+                  }}
+                />
+              </label>
+
+              {/* Conditional Fields Based on Payout Model */}
+              {copyingRecord.payout_model === "Event" && (
+                <label style={{ display: "flex", flexDirection: "column" }}>
+                  Affiliate Lead
+                  <input
+                    type="number"
+                    name="affiliate_lead"
+                    value={copyingRecord.affiliate_lead || ""}
+                    onChange={handleCopyChange}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "5px",
+                      border: "1px solid #8B00FF",
+                      marginTop: "5px",
+                    }}
+                  />
+                </label>
+              )}
+
+              {copyingRecord.payout_model === "Visit" && (
+                <label style={{ display: "flex", flexDirection: "column" }}>
+                  Non Affiliate Number
+                  <input
+                    type="number"
+                    name="nonaffiliatenumber"
+                    value={copyingRecord.nonaffiliatenumber || ""}
+                    onChange={handleCopyChange}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "5px",
+                      border: "1px solid #8B00FF",
+                      marginTop: "5px",
+                    }}
+                  />
+                </label>
+              )}
+
+              {(copyingRecord.payout_model === "Click" || copyingRecord.payout_model === "Install") && (
+                <label style={{ display: "flex", flexDirection: "column" }}>
+                  Number
+                  <input
+                    type="number"
+                    name="number"
+                    value={copyingRecord.number || ""}
+                    onChange={handleCopyChange}
+                    style={{
+                      padding: "10px",
+                      borderRadius: "5px",
+                      border: "1px solid #8B00FF",
+                      marginTop: "5px",
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div style={btnGroupStyle}>
+              <button
+                onClick={handleCancelCopy}
+                style={{ ...btnStyle, backgroundColor: "#fa0d0dff", color: "#fff" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCopySubmit}
+                style={{ ...btnStyle, backgroundColor: "#8B00FF", color: "#fff" }}
+              >
+                Create Copy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DATA TABLE */}
       <div style={dataTableContainer}>
         <DataShow 
           onEdit={handleEditRecord} 
+          onCopy={handleCopy}
           username={username}
           startDate={startDate}
           endDate={endDate}
+          refreshTrigger={refreshTrigger}
         />
       </div>
     </div>
