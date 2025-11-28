@@ -3,9 +3,10 @@ import { DateRange } from "react-date-range";
 import { format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import { Pencil, Trash2,Check, Undo2} from "lucide-react";
 
 // ========== DATA TABLE COMPONENT ==========
-const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
+const DataShow = ({ onEdit, onSubmit, onRevoke, username, startDate, endDate }) => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,28 +22,68 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
   ]);
   const filterRef = useRef(null);
 
+  // const columns = [
+  //   { key: "billing_id", label: "Billing ID" },
+  //   { key: "billing_status", label: "Billing Status" },
+  //   { key: "country", label: "Country" },
+  //   { key: "product_type", label: "Product Type" },
+  //   { key: "customer_ops_user", label: "Customer OPS User" },
+  //   { key: "bu_head_name", label: "BU Head Name" },
+  //   { key: "sales_person", label: "Sales Person" },
+  //   { key: "package_name", label: "Package Name" },
+  //   { key: "client_package_status", label: "Client Package Status" },
+  //   { key: "payout_model", label: "Payout Model" },
+  //   { key: "billing_numbers", label: "Billing Numbers" },
+  //   { key: "date_created", label: "Date Created" },
+  //   { key: "last_updated_date", label: "Last Updated Date" },
+  //   { key: "affiliate_lead", label: "Affiliate Lead" },
+  //   { key: "nonaffiliatenumber", label: "Non Affiliate Number" },
+  //   { key: "number", label: "Number" },
+  //   { key: "bu_email", label: "BU Email" },
+  //   { key: "user_email", label: "User Email" },
+  //   { key: "start_billing_date", label: "Start Billing Date" },
+  //   { key: "end_billing_date", label: "End Billing Date" },
+  // ];
   const columns = [
+    { key: "id", label: "ID" },
     { key: "billing_id", label: "Billing ID" },
-    { key: "billing_status", label: "Billing Status" },
+    { key: "crm_number", label: "CRM Number" },
     { key: "country", label: "Country" },
     { key: "product_type", label: "Product Type" },
-    { key: "customer_ops_user", label: "Customer OPS User" },
-    { key: "bu_head_name", label: "BU Head Name" },
-    { key: "sales_person", label: "Sales Person" },
     { key: "package_name", label: "Package Name" },
     { key: "client_package_status", label: "Client Package Status" },
     { key: "payout_model", label: "Payout Model" },
     { key: "billing_numbers", label: "Billing Numbers" },
-    { key: "date_created", label: "Date Created" },
-    { key: "last_updated_date", label: "Last Updated Date" },
+    { key: "billing_status", label: "Billing Status" },
     { key: "affiliate_lead", label: "Affiliate Lead" },
+    { key: "media_spend_percent", label: "Media Spend %" },
+    { key: "media_spend_number", label: "Media Spend Number" },
     { key: "nonaffiliatenumber", label: "Non Affiliate Number" },
     { key: "number", label: "Number" },
-    { key: "bu_email", label: "BU Email" },
-    { key: "user_email", label: "User Email" },
+    { key: "username", label: "Username" },
+    { key: "platform_fee", label: "Platform Fee" },
+    { key: "slab_1", label: "Slab 1" },
+    { key: "slab_2", label: "Slab 2" },
+    { key: "slab_3", label: "Slab 3" },
+    { key: "setup_fee_onetime", label: "Setup Fee (One-time)" },
+    { key: "monthly_recurring_cost", label: "Monthly Recurring Cost" },
+    { key: "monthly_subscription_fee", label: "Monthly Subscription Fee" },
+    { key: "additional_platform_marketplace_fee", label: "Additional Platform/Marketplace Fee" },
+    { key: "additional_user_login_per_month", label: "Additional User Login/Month" },
+    { key: "count_from_last_screen", label: "Count From Last Screen" },
+    { key: "submission_date", label: "Submission Date" },
+    { key: "date_created", label: "Date Created" },
     { key: "start_billing_date", label: "Start Billing Date" },
     { key: "end_billing_date", label: "End Billing Date" },
+    { key: "last_updated_date", label: "Last Updated Date" },
+    { key: "customer_ops_user", label: "Customer OPS User" },
+    { key: "user_email", label: "User Email" },
+    { key: "bu_head_name", label: "BU Head Name" },
+    { key: "bu_email", label: "BU Email" },
+    { key: "sales_person", label: "Sales Person" },
+    { key: "sales_mail_id", label: "Sales Mail ID" }
   ];
+
 
   // ✅ DELETE HANDLER
   const handleDelete = async (id) => {
@@ -103,56 +144,33 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
 
   // ✅ CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowColumnFilter(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+      const fetchData = async () => {
+        try {
+          const response = await fetch(
+            "https://biiling_portal.mfilterit.net/fetch-bu-details",
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
 
-  // ✅ FETCH DATA
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const payload = { username };
+          const result = await response.json();
+          console.log("API Response:", result);
 
-        if (startDate && endDate) {
-          payload.start_date = startDate;
-          payload.end_date = endDate;
-        }
+          // ⭐ FIX: Correct data extraction
+          setRecords(result.data || []);
 
-        console.log("📅 Fetching data with payload:", payload);
-
-        const response = await fetch("https://biiling_portal.mfilterit.net/cops_data_show", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-        console.log("API Response:", result);
-        
-        if (result.error) {
-          console.error("API Error:", result.error);
+          setLoading(false);
+        } catch (err) {
+          console.error("API error:", err);
           setRecords([]);
-        } else if (Array.isArray(result)) {
-          setRecords(result);
-        } else {
-          setRecords([result]);
+          setLoading(false);
         }
-        setLoading(false);
-      } catch (err) {
-        console.error("API error:", err);
-        setRecords([]);
-        setLoading(false);
-      }
-    };
+      };
 
-    if (username) {
-      fetchData();
-    }
+      if (username) {
+        fetchData();
+      }
   }, [username, startDate, endDate]);
 
   // ✅ SORTING
@@ -165,11 +183,37 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
   };
 
   // ✅ FILTER BY DATE
-  const filterRecordsByDate = (records) => {
-    if (!startDate || !endDate) return records;
+  // const filterRecordsByDate = (records) => {
+  //   if (!startDate || !endDate) return records;
 
-    return records.filter((record) => {
-      if (!record.date_created) return true;
+  //   return records.filter((record) => {
+  //     if (!record.date_created) return true;
+
+  //     const recordDate = new Date(record.date_created);
+  //     const start = new Date(startDate);
+  //     const end = new Date(endDate);
+
+  //     start.setHours(0, 0, 0, 0);
+  //     end.setHours(23, 59, 59, 999);
+
+  //     return recordDate >= start && recordDate <= end;
+  //   });
+  // };
+  // ✅ Safe filterRecordsByDate
+  const filterRecordsByDate = (records_0) => {
+    // Handle null, undefined, object, or array
+    let dataArray = [];
+    
+    if (Array.isArray(records_0)) {
+      dataArray = records_0;
+    } else if (records_0 && records_0.data && Array.isArray(records_0.data)) {
+      dataArray = records_0.data;
+    }
+    
+    if (!startDate || !endDate) return dataArray;
+
+    return dataArray.filter((record) => {
+      if (!record || !record.date_created) return true;
 
       const recordDate = new Date(record.date_created);
       const start = new Date(startDate);
@@ -181,6 +225,7 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
       return recordDate >= start && recordDate <= end;
     });
   };
+
 
   const dateFilteredRecords = filterRecordsByDate(records);
   
@@ -335,7 +380,7 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
           style={searchBar}
         />
 
-        <div ref={filterRef} style={{ position: "relative" }}>
+          <div ref={filterRef} style={{ position: "relative" }}>
           <button
             onClick={() => setShowColumnFilter(!showColumnFilter)}
             style={filterButton}
@@ -418,9 +463,62 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
                     ) : null
                   )}
                   <td style={{ padding: "10px", textAlign: "left", minWidth: "180px" }}>
-                    <ActionButton label="Edit" color="black" onClick={() => handleEdit(item)} />
-                    <ActionButton label="Delete" color="red" onClick={() => handleDelete(item.billing_id)} />
-                    <ActionButton label="Submit" color="green" onClick={() => handleSubmit(item)} />
+                      <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Edit"
+                            >
+                              <Pencil size={16} strokeWidth={3}  />
+                            </span>
+                          }
+                          color="black"
+                          onClick={() => handleEdit(item)}
+                        />
+
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} strokeWidth={3} />
+                            </span>
+                          }
+                          color="red"
+                          onClick={() => handleDelete(item.billing_id)}
+                        />
+
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Submit"
+                            >
+                              <Check size={20} strokeWidth={3} />
+                            </span>
+                          }
+                          color="green"
+                          onClick={() => handleSubmit(item)}
+                        />
+                        <ActionButton
+                          label={
+                            <span
+                              className="flex items-center gap-1"
+                              title="Revoke"
+                            >
+                              <Undo2 size={16} strokeWidth={3}  />
+                            </span>
+                          }
+                          color=""
+                          onClick={() => {
+                                if (onRevoke) {
+                                  onRevoke(item);  // ✅ Call parent's function
+                                } else {
+                                  console.log("❌ onRevoke not passed as prop");
+                                }
+                              }}
+                        />
                   </td>
                 </tr>
               ))}
@@ -434,18 +532,31 @@ const DataShow = ({ onEdit, onSubmit, username, startDate, endDate }) => {
 // ========== MAIN COMPONENT ==========
 const BuScreen = ({ userData }) => {
   const username = userData?.username || "guest@mfilterit.com";
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [data, setData] = useState(null);
   const [open, setOpen] = useState(false);
   const calendarRef = useRef(null);
+  const [copyingRecord, setCopyingRecord] = useState(null);
   const [range, setRange] = useState([
-  {
-    startDate: new Date(),
-    endDate: new Date(),
-    key: "selection",
-  },
-]);
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: "selection",
+    },
+  ]);
+  const formatDate = (date) => {
+    return date.toISOString().split("T")[0];
+  };
+  useEffect(() => {
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setDate(today.getDate() - 30);  // 30 days ago
+
+    setStartDate(formatDate(lastMonth));
+    setEndDate(formatDate(today));
+  }, []);
   useEffect(() => {
       const handleClickOutside = (event) => {
         if (calendarRef.current && !calendarRef.current.contains(event.target)) {
@@ -496,12 +607,111 @@ const BuScreen = ({ userData }) => {
     affiliateLead: "",
     nonAffiliateNumber:"",
     number:"",
+    crmNumber: "",
   });
 
   const [showBuForm, setShowBuForm] = useState(false);
   const [selectedBillingRow, setSelectedBillingRow] = useState(null);
   const [selectedFields, setSelectedFields] = useState([]); // Which fields user selected
   const [buFormValues, setBuFormValues] = useState({}); 
+  // ✅ REVOKE HANDLER - Undo/Revoke submission
+  const handleRevoke = async (item) => {
+    // ✅ Confirmation dialog
+    if (!window.confirm(
+      `Revoke submission for Billing ID ${item.billing_id}?\n\n` +
+      `This will:\n` +
+      `• Delete BU record\n` +
+      `• Update COPS status\n` +
+      `• Reset billing status`
+    )) {
+      return;
+    }
+
+    try {
+      const payload = { billing_id: item.billing_id };
+      
+      console.log("📤 Revoking billing ID:", payload);
+
+      const response = await fetch("https://biiling_portal.vmon.net/bu_revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("✅ Revoke API Response:", result);
+
+      if (result.status === "success") {
+        alert("✅ " + (result.message || "BU Deleted & COPS Updated Successfully!"));
+        
+        // ✅ Refresh data to show updated state
+        window.location.reload();
+      } else {
+        alert("❌ Error: " + (result.message || "Failed to revoke"));
+      }
+    } catch (err) {
+      console.error("❌ Revoke API Error:", err);
+      alert("❌ Something went wrong: " + err.message);
+    }
+  };
+  // ✅ NEW FUNCTION - For creating brand new records
+  const handleCreateNewRecord = async () => {
+    try {
+      const payload = {
+        email_id: username,  // ✅ Logged-in user's email
+        country: formData.country,
+        product_type: formData.productType,
+        sales_person: formData.salesPerson,
+        packages_name: formData.packageName,
+        client_package_status: formData.clientStatus,
+        payout_model: formData.payoutModel,
+        billing_number: formData.billingNumbers,
+        StartBilling_date: formData.startBillingDate,
+        endBilling_date: formData.endBillingDate,
+        affiliate_lead: formData.affiliateLead || 0,
+        nonAffiliateNumber: formData.nonAffiliateNumber || 0,
+        number: formData.number || 0,
+        crm_number: formData.crmNumber || ""
+      };
+
+      console.log("📤 Creating new record with payload:", payload);
+
+      const response = await fetch("https://biiling_portal.mfilterit.net/insert_bu_bill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("✅ Create API Response:", result);
+
+      if (result === "Successfully bill inserted in dashboard" || result.status === "success") {
+        alert("✅ Record Created Successfully!");
+        setShowForm(false);
+        // Reset form
+        setFormData({
+          country: "",
+          productType: "",
+          salesPerson: "",
+          packageName: "",
+          clientStatus: "",
+          payoutModel: "",
+          billingNumbers: "",
+          startBillingDate: "",
+          endBillingDate: "",
+          affiliateLead: "",
+          nonAffiliateNumber: "",
+          number: "",
+        });
+        window.location.reload();
+      } else {
+        alert("⚠️ " + (result.message || "Failed to create"));
+      }
+    } catch (error) {
+      console.error("Create error:", error);
+      alert("❌ Something went wrong!");
+    }
+  };
   const months = [
     { name: "January", value: 1 },
     { name: "February", value: 2 },
@@ -528,6 +738,74 @@ const BuScreen = ({ userData }) => {
     setSelectedFields([]);
     setBuFormValues({});
   };
+  const BU_FIELDS = [
+    {
+      key: "countLast",
+      label: "Count from last Screen",
+      inputs: [
+        { name: "countLastNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "mediaSpend",
+      label: "Media Spend",
+      inputs: [
+        { name: "mediaSpendPercent", label: "%age", type: "number" },
+        { name: "mediaSpendNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "platformFee",
+      label: "Platform Fee",
+      inputs: [
+        { name: "platformFeeNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "slab",
+      label: "Slab",
+      inputs: [
+        { name: "slab1Number", label: "Slab 1 - Numbers", type: "number" },
+        { name: "slab2Number", label: "Slab 2 - Numbers", type: "number" },
+        { name: "slab3Number", label: "Slab 3 - Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "setupFee",
+      label: "Set up Fee (One-time)",
+      inputs: [
+        { name: "setupFeeNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "monthlySubscription",
+      label: "Monthly subscription fee",
+      inputs: [
+        { name: "monthlySubscriptionNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "additionalUserLogin",
+      label: "Additional User Login (Per Month)",
+      inputs: [
+        { name: "additionalUserLoginNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "monthlyRecurringCost",
+      label: "Monthly Recurring Cost",
+      inputs: [
+        { name: "monthlyRecurringCostNumber", label: "Numbers", type: "number" }
+      ]
+    },
+    {
+      key: "additionalPlatform",
+      label: "Up to 1 Additional Platforms/Marketplaces",
+      inputs: [
+        { name: "additionalPlatformNumber", label: "Numbers", type: "number" }
+      ]
+    }
+  ];
 
   // ✅ Toggle field selection
   const toggleField = (fieldName) => {
@@ -540,48 +818,66 @@ const BuScreen = ({ userData }) => {
 
   // ✅ Handle input change
   const handleBuInput = (e) => {
-    setBuFormValues({
-      ...buFormValues,
-      [e.target.name]: e.target.value
-    });
-  };
+  setBuFormValues({
+    ...buFormValues,
+    [e.target.name]: e.target.value
+  });
+};
 
   // ✅ Submit form
+  // ✅ UPDATED - Submit BU form with status update
   const submitBuForm = async () => {
-  try {
-    const payload = {
-      // ✅ Row se values
-      billing_id: selectedBillingRow.billing_id,
-      country: selectedBillingRow.country,
-      product_type: selectedBillingRow.product_type,
-      package_name: selectedBillingRow.package_name,
-      billing_numbers: selectedBillingRow.billing_numbers,
-      billing_status: selectedBillingRow.billing_status,
-      customer_ops_user: selectedBillingRow.customer_ops_user,
-      ...buFormValues
-    };
+    try {
+      // ✅ Prepare payload with all selected field values
+      const payload = {
+        // Row se basic values
+        billing_id: selectedBillingRow.billing_id,
+        country: selectedBillingRow.country,
+        product_type: selectedBillingRow.product_type,
+        package_name: selectedBillingRow.package_name,
+        billing_numbers: selectedBillingRow.billing_numbers,
+        customer_ops_user: selectedBillingRow.customer_ops_user,
+        count_from_last_screen: buFormValues.countLastNumber || null,
+        media_spend_percent: buFormValues.mediaSpendPercent || null,
+        media_spend_number: buFormValues.mediaSpendNumber || null,
+        platform_fee: buFormValues.platformFeeNumber || null,
+        slab_1: buFormValues.slab1Number || null,
+        slab_2: buFormValues.slab2Number || null,
+        slab_3: buFormValues.slab3Number || null,
+        setup_fee_onetime: buFormValues.setupFeeNumber || null,
+        monthly_subscription_fee: buFormValues.monthlySubscriptionNumber || null,
+        additional_user_login_per_month: buFormValues.additionalUserLoginNumber || null,
+        monthly_recurring_cost: buFormValues.monthlyRecurringCostNumber || null,
+        additional_platform_marketplace_fee: buFormValues.additionalPlatformNumber || null,
+        billing_status: "Submitted by BU"
+      };
 
-      console.log("📤 Sending payload:", payload);
+      console.log("📤 Sending BU submission payload:", payload);
 
-      const response = await fetch("https://biiling_portal.mfilterit.net/submit_bu_senior", {
+      // ✅ Call update API (not submit_bu_senior, use update_billing)
+      const response = await fetch("https://biiling_portal.mfilterit.net/update-bu-details", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
       const result = await response.json();
+      console.log("✅ BU Submit Response:", result);
       
-      if (result.status === "success") {
-        alert("✅ Submitted successfully!");
+      if (result.status === "success" || result.message?.includes("success")) {
+        alert("✅ Submitted successfully! Status updated to 'Submitted by BU'");
         setShowBuForm(false);
         setSelectedFields([]);
         setBuFormValues({});
+        
+        // ✅ Refresh data
+        window.location.reload();
       } else {
-        alert("⚠️ " + result.message);
+        alert("⚠️ " + (result.message || "Failed to submit"));
       }
     } catch (error) {
       console.error("Submit error:", error);
-      alert("❌ Error: " + error);
+      alert("❌ Error: " + error.message);
     }
   };
   const handleFileSelect = (e) => {
@@ -671,7 +967,7 @@ const BuScreen = ({ userData }) => {
 
       for (let i = 0; i < jsonData.length; i++) {
         try {
-          const response = await fetch('https://biiling_portal.mfilterit.net/insert_cops_bill', {
+          const response = await fetch('https://biiling_portal.mfilterit.net/insert_bu_bill', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(jsonData[i]),
@@ -921,7 +1217,7 @@ const BuScreen = ({ userData }) => {
   const textStyle = {
     fontSize: "20px",
     margin: "0 0 10px",
-    color: "#333",
+    color: "#070707ff",
     fontWeight: "bold",
   };
 
@@ -938,6 +1234,31 @@ const BuScreen = ({ userData }) => {
     fontSize: "16px",
     fontWeight: "600",
   };
+  const CheckBoxsStyle = ({ label, fieldKey, selectedFields, toggleField }) => {
+      return (
+        <label
+          style={{
+            display: "block",
+            marginBottom: "8px",
+            padding: "8px",
+            borderRadius: "5px",
+            cursor: "pointer",
+            backgroundColor: selectedFields.includes(fieldKey) ? "#f3e5ff" : "transparent",
+            border: selectedFields.includes(fieldKey)
+              ? "2px solid #8B00FF"
+              : "2px solid transparent"
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={selectedFields.includes(fieldKey)}
+            onChange={() => toggleField(fieldKey)}
+            style={{ marginRight: "8px" }}
+          />
+          <strong>{label}</strong>
+        </label>
+      );
+    };
 
   return (
     <div
@@ -957,14 +1278,14 @@ const BuScreen = ({ userData }) => {
 
         {/* Box 2: Total Billing Numbers */}
         <div style={boxStyle}>
-          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
             Total Billing Numbers
           </h3>
           <p style={textStyle}>{data?.totalBillingNumbers || 0}</p>
         </div>
               {/* Box 1: Total Active Records */}
               <div style={boxStyle}>
-                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
                   Total Active Records
                 </h3>
                 <p style={textStyle}>{data?.totalRecords || 0}</p>
@@ -983,35 +1304,12 @@ const BuScreen = ({ userData }) => {
                   fontSize: "18px",
                   margin: "0 0 0%",
                   marginTop:"0%",
-                  marginBottom:"0%",
+                  marginBottom:"5%",
                   fontWeight: "600",
-                  color: "#333",
+                  color: "#070707ff",
                 }}
               >
                 Select Date Range
-                 {/* ✅ Clear Date Filter Button */}
-                  {(startDate || endDate) && (
-                    <button
-                      style={{
-                        ...createNewBillingRecord,
-                        backgroundColor: "#fdfbfbff", width:"10%", padding:"0px",marginLeft:"5%",height:"0%"
-                      }}
-                      onClick={() => {
-                        setStartDate("");
-                        setEndDate("");
-                        setRange([
-                          {
-                            startDate: new Date(),
-                            endDate: new Date(),
-                            key: "selection",
-                          },
-                        ]);
-                        console.log("🗑️ Date filter cleared");
-                      }}
-                    >
-                      🗑️
-                      </button>
-                    )}
               </h3>
 
               <input
@@ -1196,7 +1494,7 @@ const BuScreen = ({ userData }) => {
                 Cancel
               </button>
               <button
-                onClick={handleSubmitButton}
+                onClick={handleCreateNewRecord}
                 style={{ ...btnStyle, backgroundColor: "#8B00FF", color: "#fff" }}
               >
                 Create Record
@@ -1613,298 +1911,101 @@ const BuScreen = ({ userData }) => {
         /> */}
       </div>
       {showBuForm && selectedBillingRow && (
-  <div 
-    style={{
-      position: "fixed",
-      top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 1000
-    }}
-    onClick={() => setShowBuForm(false)}
-  >
-    <div 
-      style={{
-        backgroundColor: "#fff",
-        padding: "30px",
-        borderRadius: "10px",
-        width: "600px",
-        maxHeight: "80vh",
-        overflow: "auto",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.2)"
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Header */}
-      <h2 style={{ color: "#8B00FF", textAlign: "center", marginBottom: "20px" }}>
-        Submit BU/Senior Data
-      </h2>
-      
-      {/* Show billing info */}
-      <div style={{ 
-        background: "#f0f0f0", 
-        padding: "15px", 
-        borderRadius: "5px",
-        marginBottom: "20px"
-      }}>
-        <p style={{ margin: "5px 0" }}><strong>Billing ID:</strong> {selectedBillingRow.billing_id}</p>
-        <p style={{ margin: "5px 0" }}><strong>Country:</strong> {selectedBillingRow.country}</p>
-        <p style={{ margin: "5px 0" }}><strong>Package:</strong> {selectedBillingRow.package_name}</p>
-        <p style={{ margin: "5px 0" }}><strong>Billing Numbers:</strong> {selectedBillingRow.billing_numbers}</p>
-      </div>
+      <div 
+        style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000
+        }}
+        onClick={() => setShowBuForm(false)}
+      >
+        <div 
+          style={{
+            backgroundColor: "#fff",
+            padding: "30px",
+            borderRadius: "10px",
+            width: "600px",
+            maxHeight: "80vh",
+            overflow: "auto",
+            boxShadow: "0 8px 20px rgba(0,0,0,0.2)"
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ✅ Updated Header */}
+          <h2 style={{ color: "#8B00FF", textAlign: "center", marginBottom: "20px" }}>
+            📝 Submit to BU/Senior
+          </h2>
+          
+          {/* Show billing info with current status */}
+          <div style={{ 
+            background: "#f0f0f0", 
+            padding: "15px", 
+            borderRadius: "5px",
+            marginBottom: "20px"
+          }}>
+            <p style={{ margin: "5px 0" }}><strong>Billing ID:</strong> {selectedBillingRow.billing_id}</p>
+            <p style={{ margin: "5px 0" }}><strong>Country:</strong> {selectedBillingRow.country}</p>
+            <p style={{ margin: "5px 0" }}><strong>Package:</strong> {selectedBillingRow.package_name}</p>
+            <p style={{ margin: "5px 0" }}><strong>Billing Numbers:</strong> {selectedBillingRow.billing_numbers}</p>
+            <p style={{ margin: "5px 0", color: "#8B00FF" }}>
+              <strong>Current Status:</strong> {selectedBillingRow.billing_status}
+            </p>
+            <p style={{ margin: "5px 0", color: "#10b981", fontWeight: "600" }}>
+              → Will become: "Submitted by BU"
+            </p>
+          </div>
 
       {/* STEP 1: Field Selection Checkboxes */}
       <div style={{ marginBottom: "20px", borderBottom: "2px solid #8B00FF", paddingBottom: "15px" }}>
         <p style={{ fontWeight: "bold", marginBottom: "10px", color: "#8B00FF", fontSize: "16px" }}>
           📋 Step 1: Select fields you want to fill
         </p>
-        
-        {/* Media Spend */}
-        <label style={{ 
-          display: "block", 
-          marginBottom: "8px",
-          padding: "8px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          backgroundColor: selectedFields.includes("mediaSpend") ? "#f3e5ff" : "transparent",
-          border: selectedFields.includes("mediaSpend") ? "2px solid #8B00FF" : "2px solid transparent"
-        }}>
-          <input 
-            type="checkbox" 
-            checked={selectedFields.includes("mediaSpend")}
-            onChange={() => toggleField("mediaSpend")}
-            style={{ marginRight: "8px" }}
-          />
-          <strong>Media Spend (%age)</strong>
-        </label>
-
-        {/* Platform Fee */}
-        <label style={{ 
-          display: "block", 
-          marginBottom: "8px",
-          padding: "8px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          backgroundColor: selectedFields.includes("platformFee") ? "#f3e5ff" : "transparent",
-          border: selectedFields.includes("platformFee") ? "2px solid #8B00FF" : "2px solid transparent"
-        }}>
-          <input 
-            type="checkbox"
-            checked={selectedFields.includes("platformFee")}
-            onChange={() => toggleField("platformFee")}
-            style={{ marginRight: "8px" }}
-          />
-          <strong>Platform Fee</strong>
-        </label>
-
-        {/* Slab */}
-        <label style={{ 
-          display: "block", 
-          marginBottom: "8px",
-          padding: "8px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          backgroundColor: selectedFields.includes("slab") ? "#f3e5ff" : "transparent",
-          border: selectedFields.includes("slab") ? "2px solid #8B00FF" : "2px solid transparent"
-        }}>
-          <input 
-            type="checkbox"
-            checked={selectedFields.includes("slab")}
-            onChange={() => toggleField("slab")}
-            style={{ marginRight: "8px" }}
-          />
-          <strong>Slab (Numbers)</strong>
-        </label>
-
-        {/* Setup Fee */}
-        <label style={{ 
-          display: "block", 
-          marginBottom: "8px",
-          padding: "8px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          backgroundColor: selectedFields.includes("setupFee") ? "#f3e5ff" : "transparent",
-          border: selectedFields.includes("setupFee") ? "2px solid #8B00FF" : "2px solid transparent"
-        }}>
-          <input 
-            type="checkbox"
-            checked={selectedFields.includes("setupFee")}
-            onChange={() => toggleField("setupFee")}
-            style={{ marginRight: "8px" }}
-          />
-          <strong>Setup Fee (One-time)</strong>
-        </label>
-
-        {/* Monthly Subscription */}
-        <label style={{ 
-          display: "block", 
-          marginBottom: "8px",
-          padding: "8px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          backgroundColor: selectedFields.includes("monthlySubscription") ? "#f3e5ff" : "transparent",
-          border: selectedFields.includes("monthlySubscription") ? "2px solid #8B00FF" : "2px solid transparent"
-        }}>
-          <input 
-            type="checkbox"
-            checked={selectedFields.includes("monthlySubscription")}
-            onChange={() => toggleField("monthlySubscription")}
-            style={{ marginRight: "8px" }}
-          />
-          <strong>Monthly Subscription Fee</strong>
-        </label>
+          {BU_FIELDS.map((item) => (
+            <CheckBoxsStyle 
+              key={item.key}
+              label={item.label}
+              fieldKey={item.key}
+              selectedFields={selectedFields}
+              toggleField={toggleField}
+            />
+          ))}
       </div>
 
-      {/* STEP 2: Input Fields - Show only selected ones */}
-      {selectedFields.length > 0 && (
-        <div style={{ marginBottom: "20px" }}>
-          <p style={{ fontWeight: "bold", marginBottom: "10px", color: "#8B00FF", fontSize: "16px" }}>
-            ✏️ Step 2: Fill the values
-          </p>
-          
-          {selectedFields.includes("mediaSpend") && (
-            <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>
-                Media Spend (%)
-              </label>
-              <input
-                type="text"
-                name="mediaSpend"
-                value={buFormValues.mediaSpend || ""}
-                onChange={handleBuInput}
-                placeholder="Enter % (e.g., 10%, 15%)"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "2px solid #8B00FF",
-                  borderRadius: "5px",
-                  fontSize: "14px"
-                }}
-              />
-            </div>
-          )}
+        {selectedFields.map((fieldKey) => {
+            const field = BU_FIELDS.find((f) => f.key === fieldKey);
+            if (!field) return null;
 
-          {selectedFields.includes("platformFee") && (
-            <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>
-                Platform Fee
-              </label>
-              <input
-                type="number"
-                name="platformFee"
-                value={buFormValues.platformFee || ""}
-                onChange={handleBuInput}
-                placeholder="Enter amount"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  border: "2px solid #8B00FF",
-                  borderRadius: "5px",
-                  fontSize: "14px"
-                }}
-              />
-            </div>
-          )}
+            return (
+              <div key={fieldKey} style={{ marginBottom: "25px" }}>
+                <label style={{ fontWeight: "600", marginBottom: "8px", display: "block" }}>
+                  {field.label}
+                </label>
 
-          {selectedFields.includes("slab") && (
-            <div style={{ marginBottom: "15px" }}>
-              <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>
-                Slab Numbers
-              </label>
-              <div style={{ display: "flex", gap: "10px" }}>
-                <input
-                  type="number"
-                  name="slab1"
-                  value={buFormValues.slab1 || ""}
-                  onChange={handleBuInput}
-                  placeholder="Slab 1"
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    border: "2px solid #8B00FF",
-                    borderRadius: "5px",
-                    fontSize: "14px"
-                  }}
-                />
-                <input
-                  type="number"
-                  name="slab2"
-                  value={buFormValues.slab2 || ""}
-                  onChange={handleBuInput}
-                  placeholder="Slab 2"
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    border: "2px solid #8B00FF",
-                    borderRadius: "5px",
-                    fontSize: "14px"
-                  }}
-                />
-                <input
-                  type="number"
-                  name="slab3"
-                  value={buFormValues.slab3 || ""}
-                  onChange={handleBuInput}
-                  placeholder="Slab 3"
-                  style={{
-                    flex: 1,
-                      padding: "10px",
-                      border: "2px solid #8B00FF",
-                      borderRadius: "5px",
-                      fontSize: "14px"
-                    }}
-                  />
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {field.inputs.map((inp) => (
+                    <input
+                      key={inp.name}
+                      type={inp.type}
+                      name={inp.name}
+                      value={buFormValues[inp.name] || ""}
+                      onChange={handleBuInput}
+                      placeholder={inp.label}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        border: "2px solid #8B00FF",
+                        borderRadius: "5px"
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
-            )}
-
-            {selectedFields.includes("setupFee") && (
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>
-                  Setup Fee (One-time)
-                </label>
-                <input
-                  type="number"
-                  name="setupFee"
-                  value={buFormValues.setupFee || ""}
-                  onChange={handleBuInput}
-                  placeholder="Enter amount"
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "2px solid #8B00FF",
-                    borderRadius: "5px",
-                    fontSize: "14px"
-                  }}
-                />
-              </div>
-            )}
-
-            {selectedFields.includes("monthlySubscription") && (
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}>
-                  Monthly Subscription Fee
-                </label>
-                <input
-                  type="number"
-                  name="monthlySubscription"
-                  value={buFormValues.monthlySubscription || ""}
-                  onChange={handleBuInput}
-                  placeholder="Enter amount"
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    border: "2px solid #8B00FF",
-                    borderRadius: "5px",
-                    fontSize: "14px"
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
+            );
+          })}
 
         {/* Buttons */}
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "20px" }}>
@@ -1926,22 +2027,30 @@ const BuScreen = ({ userData }) => {
           >
             Cancel
           </button>
-          <button
-            onClick={submitBuForm}
-            disabled={selectedFields.length === 0}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: selectedFields.length === 0 ? "#ccc" : "#8B00FF",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              cursor: selectedFields.length === 0 ? "not-allowed" : "pointer",
-              fontWeight: "600",
-              fontSize: "14px"
-            }}
-          >
-            Submit
-          </button>
+              <button
+                onClick={() => {
+                  // ✅ Add confirmation before submitting
+                  if (window.confirm(
+                    `Submit billing ID ${selectedBillingRow.billing_id} to BU/Senior?\n\n` +
+                    `This will update the status to "Submitted by BU" and save all filled values.`
+                  )) {
+                    submitBuForm();
+                  }
+                }}
+                disabled={selectedFields.length === 0}
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor: selectedFields.length === 0 ? "#ccc" : "#8B00FF",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: selectedFields.length === 0 ? "not-allowed" : "pointer",
+                  fontWeight: "600",
+                  fontSize: "14px"
+                }}
+              >
+                Submit to BU/Senior
+              </button>
         </div>
       </div>
     </div>
@@ -1952,6 +2061,7 @@ const BuScreen = ({ userData }) => {
       <DataShow
           onEdit={handleEditRecord}
           onSubmit={openBuForm}  
+          onRevoke={handleRevoke} 
           username={username}
           startDate={startDate}
           endDate={endDate}

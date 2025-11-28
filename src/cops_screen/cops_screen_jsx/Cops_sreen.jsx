@@ -649,7 +649,7 @@ const lastMonthStr = formatDate(lastMonth);
     affiliateLead: "",
     nonAffiliateNumber:"",
     number:"",
-    crmNumber:""
+    crmId:""
   });
 
   // Month list
@@ -751,7 +751,7 @@ const lastMonthStr = formatDate(lastMonth);
         affiliate_lead: formData.affiliateLead || 0,
         nonAffiliateNumber: formData.nonAffiliateNumber || 0,
         number: formData.number || 0,
-        crm_number:formData.crmNumber
+        crm_number:formData.crmId
       };
       console.log('cen_number_1',payload.crm_number);
 
@@ -785,7 +785,7 @@ const lastMonthStr = formatDate(lastMonth);
         number: "",
         startBillingDate: "",
         endBillingDate: "",
-        crmNumber:""
+        crmId:""
       });
 
     } catch (err) {
@@ -900,7 +900,7 @@ const lastMonthStr = formatDate(lastMonth);
         affiliate_lead: editingRecord.affiliate_lead || 0,
         nonAffiliateNumber: editingRecord.nonaffiliatenumber || 0,
         number: editingRecord.number || 0,
-        crmNumber:editingRecord.crmNumber
+        crmNumber:editingRecord.crm_id
         // Add other fields as needed
       };
 
@@ -1137,7 +1137,7 @@ const lastMonthStr = formatDate(lastMonth);
       <div style={{ justifyContent: "center", display: "flex", gap: "15px" }}>
         {/* Box 2: Total Billing Numbers */}
         <div style={boxStyle}>
-          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+          <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
             Total Billing Numbers
           </h3>
           <p style={textStyle}>{data?.totalBillingNumbers || 0}</p>
@@ -1145,7 +1145,7 @@ const lastMonthStr = formatDate(lastMonth);
 
               {/* Box 1: Total Active Records */}
               <div style={boxStyle}>
-                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#333" }}>
+                <h3 style={{ fontSize: "18px", margin: "0 0 5px", color: "#070707ff" }}>
                   Total Active Records
                 </h3>
                 <p style={textStyle}>{data?.totalRecords || 0}</p>
@@ -1164,9 +1164,9 @@ const lastMonthStr = formatDate(lastMonth);
                   fontSize: "18px",
                   margin: "0 0 0%",
                   marginTop:"0%",
-                  marginBottom:"0%",
+                  marginBottom:"5%",
                   fontWeight: "600",
-                  color: "#333",
+                  color: "#070707ff",
                 }}
               >
                 Select Date Range
